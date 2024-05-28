@@ -2,23 +2,26 @@
 
 namespace PhpInet;
 
+use PhpInet\Inet;
+
 class InvalidCIDRException extends \Exception {}
 class InvalidCIDRActionException extends \Exception {}
 
 class CIDR extends Inet {
   protected $alwaysDisplayMask = true;
+  protected $invalidClass = InvalidCIDRException::class;
 
   function __construct(...$args) {
     parent::__construct(...$args);
     // cidr does not allow bits right of the mask
     if(gmp_popcount($this->gmp & ~$this->_getMask()) > 0) {
-      throw new InvalidCIDRException('Invalid CIDR: address has bits beyond the mask');
+      throw new $this->invalidClass('Invalid CIDR: address has bits beyond the mask');
     }
   }
 
   public static function fromRange ($start, $end) {
-    $start = Inet::fromString($start);
-    $end = Inet::fromString($end);
+    $start = new Inet($start);
+    $end = new Inet($end);
 
     $diff = $start->gmp ^ $end->gmp;
     $maskLength = $start->_addrLength() - gmp_popcount($diff);
